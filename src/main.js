@@ -20,7 +20,6 @@ new Vue({
 						:showIcons="true"
 						iconClassProp="icon"
 						prependIconClass="fas"
-                        @contextMenuItemSelect="menuItemSelected"
 						@nodeSelect="nodeSelect"></b-tree-view>
 				</div>
 			</div>
@@ -43,15 +42,11 @@ new Vue({
     },
     methods: {
         nodeSelect(node, isSelected) {
-            console.log('Node ' + node.data.name + ' has been ' + (isSelected ? 'selected' : 'deselected'))
             if (isSelected) {
                 this.selectedNode = node.data
             } else if (node.data === this.selectedNode) {
                 this.selectedNode = null
             }
-        },
-        menuItemSelected(item, node) {
-            console.log(item, node);
         },
         appendChild(currentNode) {
            let childrenFullPath= this.treeViewModel.appendChild(currentNode.data);
