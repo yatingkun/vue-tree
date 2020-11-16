@@ -1,4 +1,5 @@
-import EventBus from "./EventBus"
+import MenuEventBus from "./base_menuEvent";
+import MenuItem from "./base_menuItem";
 class BaseNode {
     constructor(fullPath, reNameDefaultMenu = null) {
         this.childs = [];
@@ -8,7 +9,7 @@ class BaseNode {
         this.disableAdd = false;
         this.disableDelete = false;
         this.disableReName = false;
-        this.IsExpanded=true;
+        this.IsExpanded = true;
         if (reNameDefaultMenu && this.contextMenuItems) {//更新默认的菜单栏名称
             reNameDefaultMenu.forEach(element => {
                 this.contextMenuItems.forEach(item => {
@@ -18,14 +19,15 @@ class BaseNode {
                 });
             });
         }
-        this.EventBus = new EventBus();
-        this._name =this.getName(fullPath);
+        this.MenuEventBus = new MenuEventBus(this);
+        this._name = this.getName(fullPath);
     }
-    defaultContextMenu = [
-        { action: 'removeNode', label: '删除节点', disabled: this.disableDelete, logo: "delete.png" },
-        { action: 'appendChild', label: '添加子节点', disabled: this.disableAdd, logo: "add.png" },
-        { action: 'renaming', label: '重命名', disabled: this.disableReName, logo: "default.png" }];
-    get name() {     
+    defaultContextMenu=[
+        new MenuItem({action: 'removeNode', label: '删除节点', disabled: this.disableDelete, logo: "delete.png"}),
+        new MenuItem({action: 'appendChild', label: '添加子节点', disabled: this.disableAdd, logo: "add.png"}),
+        new MenuItem({action: 'renaming', label: '重命名', disabled: this.disableReName, logo: "default.png"}),
+    ];
+    get name() {
         return this._name;
     }
     set name(v) {
@@ -41,29 +43,27 @@ class BaseNode {
         }
         return result;
     }
-    removeNode() {
-            this.childs.forEach((child, index) => {
-                if (child.name === this.name) {
+    appendChild(node) {
+        this.childs.push(node);
+    }
+    deleteNode(){
+        if(this.parent){
+            this.parent.childs.forEach((child,index) => {
+                if(child.name===this.name){
                     this.parent.childs.splice(index, 1);
                 }
-            });
-    }
-    appendChild(node) {
-                this.childs.push(node);
-    }
 
-    registerMenu(menus) {
-        if (menus) {
-            menus.forEach(element => {
-                if (element.fn) {
-                    this.EventBus.listen(element.action, element.fn)
-                }
-                this.contextMenuItems.push(element);
             });
         }
     }
+    registerMenu(menu,fn) {
+        if (menu) {        
+                this.MenuEventBus.listen(menu.action,fn);
+                this.contextMenuItems.push(menu);
+        }
+    }
     execute(name, params) {
-        this.EventBus.trigger(name, params);
+        this.MenuEventBus.trigger(name, params);
     }
     checkName(str) {
         let result = true;

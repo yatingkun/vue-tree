@@ -1,6 +1,7 @@
 
-class EventBus {
-    constructor() {
+class MenuEventBus {
+    constructor(content) {
+        this.self=content;
         this.actions = [];//存储发布的事件集合
     }
      listen(eName, callback, listener) {
@@ -22,7 +23,7 @@ class EventBus {
      trigger(eName, params) {
         this.actions.forEach(item => {
             if (item.key === eName) {
-                item.cb.call(this, params);
+                item.cb.call(this.self, params);
             }
         })
     }
@@ -36,4 +37,4 @@ class EventBus {
         });
     }
 }
-export default EventBus;
+export default MenuEventBus;

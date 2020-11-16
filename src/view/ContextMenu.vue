@@ -6,9 +6,7 @@
       v-for="(item, index) in contextMenuItems"
       :key="index"
     >
-      <!-- <img :src="'../assets/images/'+item.logo" /> -->
-       <!-- <img src="../assets/images/delete.png" /> -->
-         <img :src="'./images/'+item.logo" />
+      <img :src="'./images/' + item.logo" />
       <input
         type="button"
         @click.stop.prevent="menuItemSelected(item)"
@@ -20,7 +18,7 @@
 </template>
 
 <script>
-import EventBus from "../EventBus";
+import EventBus from "./EventBus";
 import VueContextMenu from "vue-context-menu";
 
 export default {
@@ -30,18 +28,20 @@ export default {
   props: {
     contextMenuItems: {
       type: Array,
-    },
-     disabled: {
-        type: Boolean,
-        default: () => {
-          return true;
-        },
+      default: () => {
+        [];
       },
+    },
+    disabled: {
+      type: Boolean,
+      default: () => {
+        return true;
+      },
+    },
   },
   data() {
     return {
       activeNode: null,
-     
     };
   },
   methods: {

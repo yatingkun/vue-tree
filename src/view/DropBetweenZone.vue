@@ -11,8 +11,6 @@
 </template>
 
 <script>
-// import EventBus from '../EventBus';
-
 export default {
   data() {
     return {

@@ -35,22 +35,20 @@
                        @blur="endRenaming"
                        v-on:keyup.esc.stop="cancelRenaming"
                        v-on:keyup.enter.stop="endRenaming">
-                <span v-else>{{ data[labelProp] }}</span>
+                <span v-else>{{ data.name }}</span>
             </span>
         </div>
         <div class="tree-node-children"
-             v-show="expanded && data[childrenProp] && Array.isArray(data[childrenProp])">
+             v-show="expanded && data.childs && Array.isArray(data.childs)">
             <drop-between-zone @nodeDrop="dropNodeAtPosition(0)"
-                               v-if="!dropDisabled && draggedNode !== null && data[childrenProp] && draggedNode.data !== data[childrenProp][0]">
+                               v-if="!dropDisabled && draggedNode !== null && data.childs && draggedNode.data !== data.childs[0]">
             </drop-between-zone>
-            <template v-for="(nodeData, index) in data[childrenProp]" >
+            <template v-for="(nodeData, index) in data.childs" >
                 <tree-node
                         :data="nodeData"
                         :key="nodeData[keyProp]"
                         ref="childNodes"
                         :keyProp="keyProp"
-                        :labelProp="labelProp"
-                        :childrenProp="childrenProp"
                         :renameOnDblClick="renameOnDblClick"
                         :draggable="draggable"
                         :defaultIconClass="defaultIconClass"
@@ -64,7 +62,7 @@
                 </tree-node>
                 <drop-between-zone :key="index"
                         @nodeDrop="dropNodeAtPosition(index + 1)"
-                        v-if="!dropDisabled && draggedNode && draggedNode.data !== nodeData && (index + 1 >= data[childrenProp].length || draggedNode.data !== data[childrenProp][index + 1])">
+                        v-if="!dropDisabled && draggedNode && draggedNode.data !== nodeData && (index + 1 >= data.childs.length || draggedNode.data !== data.childs[index + 1])">
                 </drop-between-zone>  <!---拖拽时要显示的区域--->
             </template>
         </div>
@@ -73,7 +71,7 @@
 </template>
 
 <script>
-    import EventBus from '../EventBus';
+    import EventBus from './EventBus';
     import DropBetweenZone from './DropBetweenZone.vue';
     import Vue from 'vue';
     export default {
@@ -89,14 +87,6 @@
             keyProp: {
                 type: String,
                 default: 'id'
-            },
-            labelProp: {
-                type: String,
-                default: 'name'
-            },
-            childrenProp: {
-                type: String,
-                default: 'children'
             },
             draggable: {
                 type: Boolean,
@@ -140,7 +130,7 @@
                 draggedNode: null,
                 dropDisabled: false,
                 renaming: false,
-                renameNewLabel: this.data[this.labelProp]
+                renameNewLabel: this.data.name
             }
         },
         directives: {
@@ -166,7 +156,7 @@
             nodeDragOver(dragover) {
                 if (dragover) {
                     // check if node has any children, if yes then expand it after 1 sec
-                    if (!this.expanded && Array.isArray(this.data[this.childrenProp]) && this.data[this.childrenProp].length > 0) {
+                    if (!this.expanded && Array.isArray(this.data.childs) && this.data.childs.length > 0) {
                         this.expandNodeTimeout = setTimeout(this.toggle, 1000)
                     }
                 } else if (this.expandNodeTimeout) {
@@ -176,7 +166,7 @@
         },
         computed: {
             hasChildren() {
-                return this.data[this.childrenProp] !== undefined && this.data[this.childrenProp].length > 0
+                return this.data.childs !== undefined && this.data.childs.length > 0
             },
             iconClass() {
                 return this.iconClassProp && this.data[this.iconClassProp] !== undefined
@@ -185,7 +175,7 @@
         },
         methods: {
             toggle() {
-                if (this.data[this.childrenProp] && Array.isArray(this.data[this.childrenProp]) && this.data[this.childrenProp].length > 0) {
+                if (this.data.childs && Array.isArray(this.data.childs) && this.data.childs.length > 0) {
                     this.expanded = !this.expanded
                 }
             },
@@ -205,7 +195,7 @@
                 }
             },
             expand() {
-                if (this.data[this.childrenProp] && Array.isArray(this.data[this.childrenProp]) && this.data[this.childrenProp].length > 0) {
+                if (this.data.childs && Array.isArray(this.data.childs) && this.data.childs.length > 0) {
                     this.expanded = true
                 }
             },
@@ -221,8 +211,8 @@
             },
             cutNode() {
                 EventBus.$off('dropOK')
-                let idx = this.data[this.childrenProp].indexOf(window._bTreeView.draggedNodeData)
-                this.data[this.childrenProp].splice(idx, 1)
+                let idx = this.data.childs.indexOf(window._bTreeView.draggedNodeData)
+                this.data.childs.splice(idx, 1)
                 // let's notify that node data was successfully cut (removed from array)
                 EventBus.$emit('cutOK')
             },
@@ -243,11 +233,11 @@
                 window._bTreeView.draggedNodeKey = this.data[this.keyProp]
             },
             drop() {
-                if (this.data[this.childrenProp] === undefined) {
-                    Vue.set(this.data, this.childrenProp, [])
+                if (this.data.childs === undefined) {
+                    Vue.set(this.data, "childs", [])
                 }
                 // append node
-                this.dropNodeAtPosition(this.data[this.childrenProp].length)
+                this.dropNodeAtPosition(this.data.childs.length)
                 this.nodeDragOver = false
             },
             dragEnter(ev) {
@@ -255,8 +245,8 @@
                 this.dropEffect = ev.dataTransfer.dropEffect = !this.dropDisabled
                 && window._bTreeView !== undefined && window._bTreeView.draggedNodeKey !== undefined
                 && this.data[this.keyProp] !== window._bTreeView.draggedNodeKey
-                && (this.data[this.childrenProp] === undefined
-                    || this.data[this.childrenProp].indexOf(window._bTreeView.draggedNodeData) < 0)
+                && (this.data.childs === undefined
+                    || this.data.childs.indexOf(window._bTreeView.draggedNodeData) < 0)
                 && !this.isDescendantOf(window._bTreeView.draggedNodeData)
                     ? 'move' : 'none'
                 if (this.dropEffect === 'move' && this.enterLeaveCounter === 1) {
@@ -279,7 +269,7 @@
                 ev.dataTransfer.dropEffect = this.dropEffect || 'none'
             },
             isDescendantOf(nodeData) {
-                if (nodeData[this.childrenProp] === undefined) {
+                if (nodeData.childs === undefined) {
                     return false
                 }
                 let nodes = [
@@ -287,13 +277,13 @@
                 ]
                 for (let i = 0; i < nodes.length; i++) {
                     let tmpNode = nodes[i]
-                    if (tmpNode[this.childrenProp] !== undefined) {
-                        for (let child of tmpNode[this.childrenProp]) {
+                    if (tmpNode.childs !== undefined) {
+                        for (let child of tmpNode.childs) {
                             if (child === this.data) {
                                 return true
                             }
                         }
-                        nodes.push(...tmpNode[this.childrenProp])
+                        nodes.push(...tmpNode.childs)
                     }
                 }
             },
@@ -311,10 +301,10 @@
             dropNodeAtPosition(pos) {
                 // position can change if we move node within the same parent node (same level)
                 // so it's better to remember node at previous position
-                let insertAfter = pos - 1 < 0 ? null : this.data[this.childrenProp][pos - 1]
+                let insertAfter = pos - 1 < 0 ? null : this.data.childs[pos - 1]
                 EventBus.$on('cutOK', () => {
-                    let pos = this.data[this.childrenProp].indexOf(insertAfter) + 1
-                    this.data[this.childrenProp].splice(pos, 0, window._bTreeView.draggedNodeData)
+                    let pos = this.data.childs.indexOf(insertAfter) + 1
+                    this.data.childs.splice(pos, 0, window._bTreeView.draggedNodeData)
                     delete window._bTreeView.draggedNodeKey
                     delete window._bTreeView.draggedNodeData
                     EventBus.$off('cutOK')
@@ -328,35 +318,36 @@
                 this.select()
                 if(this.contextMenu) {
                     event.preventDefault();
-                    EventBus.$emit('openNodeContextMenu', this)
+                    //EventBus.$emit('openNodeContextMenu', this)
+                    EventBus.$emit('setContextMenu', this)//先通知主页面设置菜单内容
                 }
             },
             delete() {
                 this.$emit('deleteNode', this)
             },
             deleteChildNode(childNodeData) {
-                let children = this.data[this.childrenProp]
+                let children = this.data.childs
                 let idx = children.indexOf(childNodeData)
                 children.splice(idx, 1)
             },
             appendChild(childNodeData) {
-                if (this.data[this.childrenProp] === undefined) {
-                    Vue.set(this.data, this.childrenProp, [])
+                if (this.data.childs === undefined) {
+                    Vue.set(this.data, "childs", [])
                 }
-                this.data[this.childrenProp].push(childNodeData)
+                this.data.childs.push(childNodeData)
                 this.expanded = true
             },
             startRenaming() {
                 this.deselect();
-                this.renameNewLabel = this.data[this.labelProp]
+                this.renameNewLabel = this.data.name
                 this.renaming = true
             },
             cancelRenaming() {
-                this.renameNewLabel = this.data[this.labelProp]
+                this.renameNewLabel = this.data.name
                 this.renaming = false
             },
             endRenaming() {
-                this.data[this.labelProp] = this.renameNewLabel
+                this.data.name = this.renameNewLabel
                 this.renaming = false
             },
             dblClickLabel() {
@@ -367,7 +358,7 @@
         },
         created() {
             EventBus.$on('nodeDragStart', this.draggingStarted)
-            this.$watch(`data.${this.childrenProp}`, function (children) {
+            this.$watch(`data.childs`, function (children) {
                 if (children.length === 0 && this.expanded) {
                     this.expanded = false
                 }

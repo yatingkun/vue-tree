@@ -1,9 +1,13 @@
-import BaseNode from './base_node'
-class BaseTree {
+import BaseNode from './TestNode';
+import MenuItem from './viewmodel/base_menuItem'
+class Mytree {
     constructor(paths) {
         this.paths = paths;
         this.nodes = [];
         this.creatTree(this.paths);
+    }
+    newAction=function(){
+        console.log(this,"新的骚操作!上下文定向到选中节点");
     }
     creatTree(paths) {
         if (!paths)
@@ -47,8 +51,10 @@ class BaseTree {
                 newTreeNodeBaseViewModel = new BaseNode(fullPathToRootName);
                 //获取父节点
                 let parentTreeNodeBaseViewModel = this.GetTreeNodeWithFullPathNameToRoot(this.nodes, parentFullPathToRootName.split('.'), 0);
-                if (parentTreeNodeBaseViewModel != null) {
 
+                if (parentTreeNodeBaseViewModel != null) {
+                    newTreeNodeBaseViewModel.parent=parentTreeNodeBaseViewModel;
+                newTreeNodeBaseViewModel.registerMenu( new MenuItem({action: 'newAction', label: '新的骚操作', disabled: false, logo: "delete.png"}),this.newAction);
                     parentTreeNodeBaseViewModel.appendChild(newTreeNodeBaseViewModel); //往父节点里面添加一个子节点
                 } else {
                     //要创建的节点树里面没有，且找不到父节点。代表当前新增的节点为根节点
@@ -102,5 +108,6 @@ class BaseTree {
         }
 
     }
+  
 }
-export default BaseTree;
+export default Mytree;
