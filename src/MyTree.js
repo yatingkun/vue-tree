@@ -1,5 +1,6 @@
 import BaseNode from './TestNode';
-import MenuItem from './viewmodel/base_menuItem'
+import MenuItem from './viewmodel/base_menuItem';
+import TextNode from './TestNode';
 class Mytree {
     constructor(paths) {
         this.paths = paths;
@@ -54,12 +55,13 @@ class Mytree {
 
                 if (parentTreeNodeBaseViewModel != null) {
                     newTreeNodeBaseViewModel.parent=parentTreeNodeBaseViewModel;
-                newTreeNodeBaseViewModel.registerMenu( new MenuItem({action: 'newAction', label: '新的骚操作', disabled: false, logo: "delete.png"}),this.newAction);
+                    newTreeNodeBaseViewModel.registerMenu( new MenuItem({action: 'newAction', label: '新的操作', disabled: false, logo: "delete.png",parent:newTreeNodeBaseViewModel}),this.newAction);
                     parentTreeNodeBaseViewModel.appendChild(newTreeNodeBaseViewModel); //往父节点里面添加一个子节点
                 } else {
                     //要创建的节点树里面没有，且找不到父节点。代表当前新增的节点为根节点
                     this.nodes.push(newTreeNodeBaseViewModel);
                     newTreeNodeBaseViewModel.IsExpanded = true; //根节点默认展开
+                    newTreeNodeBaseViewModel.selected=true;
                 }
             }
         }
@@ -108,6 +110,11 @@ class Mytree {
         }
 
     }
+     appendChild(currentNode){
+        let newNode=new TextNode(currentNode.parent.fullPath+".NewName");
+        currentNode.appendChild(newNode);
+        currentNode.IsExpanded=true;
+     }
   
 }
 export default Mytree;

@@ -4,6 +4,7 @@ class BaseMenuItem{
          this.label=obj.label;
          this.disabled=obj.disabled; 
          this.logo=obj.logo;
+         this.parent=obj.parent;
     }
 }
 export default BaseMenuItem;

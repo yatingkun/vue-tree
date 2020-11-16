@@ -26,7 +26,6 @@
         ref="rootNodes"
         @nodeSelect="nodeSelect"
         @nodeDragStart="nodeDragStart"
-        @deleteNode="deleteNode"
       >
       </tree-node>
       <drop-between-zone
@@ -103,7 +102,7 @@ export default {
   data() {
     return {
       draggedNode: null,
-      contextMenuItems: [],
+      currentNode: null,
     };
   },
   components: {
@@ -176,24 +175,14 @@ export default {
       });
       EventBus.$emit("dropOK");
     },
-    deleteNode(fullPath) {
-      let nodes = this.data;
-      console.log(nodes);
-      console.log(fullPath);
-    //   nodes.forEach((element, index) => {
-    //     if (element === fullPath) {
-    //       nodes.splice(index, 1);
-    //       console.log(nodes);
-    //     }
-    //   });
-    },
     menuItemSelected(item, node) {
       switch (item.action) {
         case "removeNode":
           node.data.deleteNode();
           break;
         case "appendChild":
-          node.data.appendChild();
+          //node.data.appendChild();
+          EventBus.$emit("appendChild", node.data);//交由viewModel
           break;
         case "renaming":
           this.renaming(node.data);
@@ -204,12 +193,12 @@ export default {
       }
     },
     setMenuContent(node) {
-      this.contextMenuItems = node.data.contextMenuItems;
+      this.currentNode = node.data;//获取当前右击的节点，在computed中更新菜单栏状态
       EventBus.$emit("openNodeContextMenu", node);
     },
     renaming(node) {
       console.log(node);
-    },
+    }
   },
   created() {
     this.selectedNode = null;
@@ -220,6 +209,25 @@ export default {
       this.createNodeMap();
     });
     EventBus.$on("setContextMenu", this.setMenuContent);
+  },
+  computed: {
+    contextMenuItems: {
+      get() {
+        if (this.currentNode) {
+          this.currentNode.contextMenuItems.forEach((element) => {
+            if (element.action === "removeNode") {
+              if (!this.currentNode.parent) {
+                //根节点
+                element.disabled = true;
+              }
+            }
+          });
+          return this.currentNode.contextMenuItems;
+        } else {
+          return [];
+        }
+      },
+    },
   },
 };
 </script>

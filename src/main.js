@@ -1,9 +1,10 @@
 import Vue from 'vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import treeView from './view/TreeView.vue'
-import Tree from './MyTree'
-let arry1=["11.22","11.22.33"]
-let treeViewModel=new Tree(arry1);
+import MyTree from './MyTree'
+let arry1 = ["11.22", "11.22.33"]
+let treeViewModel = new MyTree(arry1);
+import EventBus from './view/EventBus';
 new Vue({
     template: `
 	<div class="row">
@@ -37,6 +38,7 @@ new Vue({
         return {
             treeData: treeViewModel.nodes,
             selectedNode: null,
+            treeViewModel:treeViewModel
         }
     },
     methods: {
@@ -48,15 +50,18 @@ new Vue({
                 this.selectedNode = null
             }
         },
-        menuItemSelected(item, node) {      
-            console.log(item,node);
+        menuItemSelected(item, node) {
+            console.log(item, node);
+        },
+        appendChild(currentNode) {
+            this.treeViewModel.appendChild(currentNode);
         }
     },
     components: {
         "b-tree-view": treeView
     },
-    updated() {
-
-    }
+    created() {
+        EventBus.$on("appendChild", this.appendChild);
+    },
 });
 

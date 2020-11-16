@@ -9,7 +9,8 @@ class BaseNode {
         this.disableAdd = false;
         this.disableDelete = false;
         this.disableReName = false;
-        this.IsExpanded = true;
+        this.IsExpanded = false;
+        this.selected=false;
         if (reNameDefaultMenu && this.contextMenuItems) {//更新默认的菜单栏名称
             reNameDefaultMenu.forEach(element => {
                 this.contextMenuItems.forEach(item => {
@@ -23,9 +24,9 @@ class BaseNode {
         this._name = this.getName(fullPath);
     }
     defaultContextMenu=[
-        new MenuItem({action: 'removeNode', label: '删除节点', disabled: this.disableDelete, logo: "delete.png"}),
-        new MenuItem({action: 'appendChild', label: '添加子节点', disabled: this.disableAdd, logo: "add.png"}),
-        new MenuItem({action: 'renaming', label: '重命名', disabled: this.disableReName, logo: "default.png"}),
+        new MenuItem({action: 'removeNode', label: '删除节点', disabled: this.disableDelete, logo: "delete.png",parent:this.parent}),
+        new MenuItem({action: 'appendChild', label: '添加子节点', disabled: this.disableAdd, logo: "add.png",parent:this.parent}),
+        new MenuItem({action: 'renaming', label: '重命名', disabled: this.disableReName, logo: "default.png",parent:this.parent}),
     ];
     get name() {
         return this._name;
@@ -44,6 +45,9 @@ class BaseNode {
         return result;
     }
     appendChild(node) {
+        if(!node.parent){
+            node.parent=this;
+        }
         this.childs.push(node);
     }
     deleteNode(){
