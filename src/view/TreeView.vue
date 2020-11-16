@@ -182,32 +182,43 @@ export default {
           break;
         case "appendChild":
           //node.data.appendChild();
-          EventBus.$emit("appendChild", node.data);//交由viewModel
+          EventBus.$emit("appendChild", node);
           break;
         case "renaming":
-          this.renaming(node.data);
+          node.startRenaming();
           break;
         default:
-          //this.$emit("contextMenuItemSelect", item, node);
           node.data.execute(item.action, node.data);
       }
     },
     setMenuContent(node) {
-      this.currentNode = node.data;//获取当前右击的节点，在computed中更新菜单栏状态
+      this.currentNode = node.data; //获取当前右击的节点，在computed中更新菜单栏状态
       EventBus.$emit("openNodeContextMenu", node);
     },
-    renaming(node) {
-      console.log(node);
-    }
+    //添加节点后切换到新节点进入重命名模式
+    afterAddChild(currentNode, newNodePath) {
+      this.$nextTick(() => {//节点更新完毕后执行
+        if (!newNodePath) return;
+        currentNode.selected = false; //当前右击的树节点取消选中
+        if (currentNode.$children) {
+          currentNode.$children.forEach((element) => {
+            if (element.data.fullPath === newNodePath) {
+              element.selected = true;
+              element.startRenaming();
+            }
+          });
+        }
+      });
+    },
   },
   created() {
     this.selectedNode = null;
     EventBus.$on("nodeDragStart", this.draggingStarted);
     EventBus.$on("contextMenuItemSelect", this.menuItemSelected);
     this.$nextTick(() => {
-      //在created()里使用this.$nextTick()可以等待dom生成以后再来获取dom对象//this.$nextTick()方法主要是用在随数据改变而改变的dom应用场景中
       this.createNodeMap();
     });
+    EventBus.$on("afterAddChild", this.afterAddChild);
     EventBus.$on("setContextMenu", this.setMenuContent);
   },
   computed: {
@@ -216,6 +227,12 @@ export default {
         if (this.currentNode) {
           this.currentNode.contextMenuItems.forEach((element) => {
             if (element.action === "removeNode") {
+              if (!this.currentNode.parent) {
+                //根节点
+                element.disabled = true;
+              }
+            }
+            if (element.action === "renaming") {
               if (!this.currentNode.parent) {
                 //根节点
                 element.disabled = true;

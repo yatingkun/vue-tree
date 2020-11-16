@@ -80,7 +80,6 @@
           :contextMenu="contextMenu"
           @nodeSelect="childNodeSelect"
           @nodeDragStart="nodeDragStart"
-          @deleteNode="deleteChildNode"
         >
         </tree-node>
         <drop-between-zone
@@ -161,6 +160,7 @@ export default {
       dropDisabled: false,
       renaming: false,
       renameNewLabel: this.data.name,
+      currentAddedNode:""
     };
   },
   directives: {
@@ -177,8 +177,12 @@ export default {
     },
   },
   watch: {
-    selected(selected) {
-      this.$emit("nodeSelect", this, selected);
+    selected: {
+      //深度监听，可监听到对象、数组的变化
+      handler(val) {
+        this.$emit("nodeSelect", this, val);
+      },
+      deep: true, //true 深度监听
     },
     dropDisabled(disabled) {
       this.$emit(disabled ? "dropDisabled" : "dropEnabled");
@@ -369,11 +373,6 @@ export default {
     delete() {
       this.$emit("deleteNode", this);
     },
-    deleteChildNode(childNodeData) {
-      let children = this.data.childs;
-      let idx = children.indexOf(childNodeData);
-      children.splice(idx, 1);
-    },
     appendChild(childNodeData) {
       if (this.data.childs === undefined) {
         Vue.set(this.data, "childs", []);
@@ -400,10 +399,11 @@ export default {
       }
     },
     selectedRoot() {
-      if(!this.data.parent){//根节点
+      if (!this.data.parent) {
+        //根节点
         this.$emit("nodeSelect", this, true);
       }
-    },
+    }
   },
   created() {
     EventBus.$on("nodeDragStart", this.draggingStarted);
@@ -420,7 +420,7 @@ export default {
         this.dropDisabled = false;
       });
     }
-    this.selectedRoot();
+    this.selectedRoot(); //选中根节点
   },
 };
 </script>

@@ -111,9 +111,11 @@ class Mytree {
 
     }
      appendChild(currentNode){
-        let newNode=new TextNode(currentNode.parent.fullPath+".NewName");
+        let newNode=new TextNode(currentNode.fullPath+".NewName");
         currentNode.appendChild(newNode);
         currentNode.IsExpanded=true;
+        newNode.selected=true;
+        return newNode.fullPath;
      }
   
 }

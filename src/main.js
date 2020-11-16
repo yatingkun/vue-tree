@@ -20,7 +20,7 @@ new Vue({
 						:showIcons="true"
 						iconClassProp="icon"
 						prependIconClass="fas"
-						@contextMenuItemSelect="menuItemSelected"
+                        @contextMenuItemSelect="menuItemSelected"
 						@nodeSelect="nodeSelect"></b-tree-view>
 				</div>
 			</div>
@@ -38,7 +38,7 @@ new Vue({
         return {
             treeData: treeViewModel.nodes,
             selectedNode: null,
-            treeViewModel:treeViewModel
+            treeViewModel:treeViewModel,
         }
     },
     methods: {
@@ -54,14 +54,19 @@ new Vue({
             console.log(item, node);
         },
         appendChild(currentNode) {
-            this.treeViewModel.appendChild(currentNode);
+           let childrenFullPath= this.treeViewModel.appendChild(currentNode.data);
+           EventBus.$emit("afterAddChild",currentNode,childrenFullPath);
+           //currentNode.afterAddChild(childrenFullPath);
         }
     },
     components: {
         "b-tree-view": treeView
     },
     created() {
-        EventBus.$on("appendChild", this.appendChild);
+        
     },
+    mounted:function(){
+        EventBus.$on("appendChild", this.appendChild);
+     }
 });
 

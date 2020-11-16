@@ -34,6 +34,10 @@ class BaseNode {
     set name(v) {
         if (this.checkName(v)) {
             this._name = v;
+            if(this.parent){
+                this.fullPath=this.parent.fullPath+"."+v;
+            }
+           
         }
     }
     getName(str) {
