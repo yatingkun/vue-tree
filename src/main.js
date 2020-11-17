@@ -14,12 +14,12 @@ new Vue({
 					<b-tree-view
 						:data="treeData"
 						ref="tree"
-						:nodesDraggable="false"
 						:contextMenu="true"
 						:renameNodeOnDblClick="true"
 						:showIcons="true"
 						iconClassProp="icon"
-						prependIconClass="fas"
+                        prependIconClass="fas"
+                        @appendChild="appendChild"
 						@nodeSelect="nodeSelect"></b-tree-view>
 				</div>
 			</div>
@@ -51,9 +51,9 @@ new Vue({
         appendChild(currentNode) {
            let childrenFullPath= this.treeViewModel.appendChild(currentNode.data);
            EventBus.$emit("afterAddChild",currentNode,childrenFullPath);
-           //currentNode.afterAddChild(childrenFullPath);
         }
     },
+
     components: {
         "b-tree-view": treeView
     },
@@ -61,7 +61,7 @@ new Vue({
         
     },
     mounted:function(){
-        EventBus.$on("appendChild", this.appendChild);
+        this.$on("appendChild", this.appendChild);
      }
 });
 

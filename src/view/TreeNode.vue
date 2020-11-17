@@ -5,15 +5,7 @@
       :class="{
         'has-child-nodes': hasChildren,
         'tree-node-expanded': this.data.IsExpanded,
-        'drop-active': nodeDragOver,
       }"
-      @drop.prevent="drop"
-      @dragover.prevent="dragover"
-      :draggable="draggable && !renaming"
-      @dragstart.stop="dragstart"
-      @dragend="dragend"
-      @dragenter.prevent.stop="dragEnter"
-      @dragleave.prevent.stop="dragLeave"
       @contextmenu="showContextMenu($event)"
     >
       <transition name="rotateArrow">
@@ -55,46 +47,20 @@
       class="tree-node-children"
       v-show="this.data.IsExpanded && data.childs && Array.isArray(data.childs)"
     >
-      <drop-between-zone
-        @nodeDrop="dropNodeAtPosition(0)"
-        v-if="
-          !dropDisabled &&
-          draggedNode !== null &&
-          data.childs &&
-          draggedNode.data !== data.childs[0]
-        "
-      >
-      </drop-between-zone>
-      <template v-for="(nodeData, index) in data.childs">
+      <template v-for="(nodeData) in data.childs">
         <tree-node
           :data="nodeData"
-          :key="nodeData[keyProp]"
+          :key="nodeData.fullPath"
           ref="childNodes"
-          :keyProp="keyProp"
           :renameOnDblClick="renameOnDblClick"
-          :draggable="draggable"
           :defaultIconClass="defaultIconClass"
           :iconClassProp="iconClassProp"
           :showIcon="showIcon"
           :prependIconClass="prependIconClass"
           :contextMenu="contextMenu"
           @nodeSelect="childNodeSelect"
-          @nodeDragStart="nodeDragStart"
         >
         </tree-node>
-        <drop-between-zone
-          :key="index"
-          @nodeDrop="dropNodeAtPosition(index + 1)"
-          v-if="
-            !dropDisabled &&
-            draggedNode &&
-            draggedNode.data !== nodeData &&
-            (index + 1 >= data.childs.length ||
-              draggedNode.data !== data.childs[index + 1])
-          "
-        >
-        </drop-between-zone>
-        <!---拖拽时要显示的区域--->
       </template>
     </div>
   </div>
@@ -102,25 +68,15 @@
 
 <script>
 import EventBus from "./EventBus";
-import DropBetweenZone from "./DropBetweenZone.vue";
 import Vue from "vue";
 export default {
   name: "tree-node",
   components: {
-    DropBetweenZone,
   },
   props: {
     data: {
       type: Object,
       required: true,
-    },
-    keyProp: {
-      type: String,
-      default: "id",
-    },
-    draggable: {
-      type: Boolean,
-      default: false,
     },
     renameOnDblClick: {
       type: Boolean,
@@ -154,13 +110,10 @@ export default {
   data() {
     return {
       selected: this.data.selected,
-      nodeDragOver: false,
       enterLeaveCounter: 0,
-      draggedNode: null,
-      dropDisabled: false,
       renaming: false,
       renameNewLabel: this.data.name,
-      currentAddedNode:""
+      currentAddedNode: "",
     };
   },
   directives: {
@@ -183,23 +136,6 @@ export default {
         this.$emit("nodeSelect", this, val);
       },
       deep: true, //true 深度监听
-    },
-    dropDisabled(disabled) {
-      this.$emit(disabled ? "dropDisabled" : "dropEnabled");
-    },
-    nodeDragOver(dragover) {
-      if (dragover) {
-        // check if node has any children, if yes then expand it after 1 sec
-        if (
-          !this.data.IsExpanded &&
-          Array.isArray(this.data.childs) &&
-          this.data.childs.length > 0
-        ) {
-          this.expandNodeTimeout = setTimeout(this.toggle, 1000);
-        }
-      } else if (this.expandNodeTimeout) {
-        clearTimeout(this.expandNodeTimeout);
-      }
     },
   },
   computed: {
@@ -253,70 +189,8 @@ export default {
       // forward event to the parent node
       this.$emit("nodeSelect", node, isSelected);
     },
-    nodeDragStart() {
-      EventBus.$on("dropOK", this.cutNode);
-    },
-    cutNode() {
-      EventBus.$off("dropOK");
-      let idx = this.data.childs.indexOf(window._bTreeView.draggedNodeData);
-      this.data.childs.splice(idx, 1);
-      // let's notify that node data was successfully cut (removed from array)
-      EventBus.$emit("cutOK");
-    },
     getChildNodes() {
       return this.$refs.childNodes || [];
-    },
-    dragstart(ev) {
-      this.dropDisabled = true;
-      ev.dataTransfer.dropEffect = "none";
-      this.$emit("nodeDragStart");
-      EventBus.$emit("nodeDragStart", this);
-      // didn't use dataTransfer it's not fully supported by ie
-      // and beacuse it's not available in the dragover event handler
-      if (window._bTreeView === undefined) {
-        window._bTreeView = {};
-      }
-      window._bTreeView.draggedNodeData = this.data;
-      window._bTreeView.draggedNodeKey = this.data[this.keyProp];
-    },
-    drop() {
-      if (this.data.childs === undefined) {
-        Vue.set(this.data, "childs", []);
-      }
-      // append node
-      this.dropNodeAtPosition(this.data.childs.length);
-      this.nodeDragOver = false;
-    },
-    dragEnter(ev) {
-      this.enterLeaveCounter++;
-      this.dropEffect = ev.dataTransfer.dropEffect =
-        !this.dropDisabled &&
-        window._bTreeView !== undefined &&
-        window._bTreeView.draggedNodeKey !== undefined &&
-        this.data[this.keyProp] !== window._bTreeView.draggedNodeKey &&
-        (this.data.childs === undefined ||
-          this.data.childs.indexOf(window._bTreeView.draggedNodeData) < 0) &&
-        !this.isDescendantOf(window._bTreeView.draggedNodeData)
-          ? "move"
-          : "none";
-      if (this.dropEffect === "move" && this.enterLeaveCounter === 1) {
-        this.nodeDragOver = true;
-      }
-    },
-    dragLeave() {
-      this.enterLeaveCounter--;
-      if (this.enterLeaveCounter !== 1) {
-        this.nodeDragOver = false;
-      }
-    },
-    dragend() {
-      EventBus.$off("dropOK");
-      EventBus.$off("cutOK");
-      this.dropDisabled = false;
-      EventBus.$emit("nodeDragEnd");
-    },
-    dragover(ev) {
-      ev.dataTransfer.dropEffect = this.dropEffect || "none";
     },
     isDescendantOf(nodeData) {
       if (nodeData.childs === undefined) {
@@ -335,30 +209,6 @@ export default {
         }
       }
     },
-    draggingStarted(draggedNode) {
-      this.draggedNode = draggedNode;
-      this.enterLeaveCounter = 0;
-      // let's listen for the drag end event
-      EventBus.$on("nodeDragEnd", this.draggingEnded);
-    },
-    draggingEnded() {
-      // stop listening for the dragging end event
-      EventBus.$off("nodeDragEnd", this.draggingEnded);
-      this.draggedNode = null;
-    },
-    dropNodeAtPosition(pos) {
-      // position can change if we move node within the same parent node (same level)
-      // so it's better to remember node at previous position
-      let insertAfter = pos - 1 < 0 ? null : this.data.childs[pos - 1];
-      EventBus.$on("cutOK", () => {
-        let pos = this.data.childs.indexOf(insertAfter) + 1;
-        this.data.childs.splice(pos, 0, window._bTreeView.draggedNodeData);
-        delete window._bTreeView.draggedNodeKey;
-        delete window._bTreeView.draggedNodeData;
-        EventBus.$off("cutOK");
-      });
-      EventBus.$emit("dropOK");
-    },
     showContextMenu(event) {
       if (this.renaming) {
         this.cancelRenaming();
@@ -366,7 +216,6 @@ export default {
       this.select();
       if (this.contextMenu) {
         event.preventDefault();
-        //EventBus.$emit('openNodeContextMenu', this)
         EventBus.$emit("setContextMenu", this); //先通知主页面设置菜单内容
       }
     },
@@ -397,30 +246,20 @@ export default {
       if (this.renameOnDblClick) {
         this.startRenaming();
       }
-    },
-    selectedRoot() {
-      if (!this.data.parent) {
-        //根节点
-        this.$emit("nodeSelect", this, true);
-      }
     }
   },
   created() {
-    EventBus.$on("nodeDragStart", this.draggingStarted);
     this.$watch(`data.childs`, function (children) {
       if (children.length === 0 && this.data.IsExpanded) {
         this.data.expanded = false;
       }
     });
-    if (this.$parent) {
-      this.$parent.$on("dropDisabled", () => {
-        this.dropDisabled = true;
-      });
-      this.$parent.$on("dropEnabled", () => {
-        this.dropDisabled = false;
-      });
-    }
-    this.selectedRoot(); //选中根节点
+    this.$nextTick(() => {
+     if (!this.data.parent) {
+        //根节点
+        this.$emit("nodeSelect", this, true);
+      }
+    });
   },
 };
 </script>

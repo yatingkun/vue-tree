@@ -1,4 +1,3 @@
-import BaseNode from './TestNode';
 import MenuItem from './viewmodel/base_menuItem';
 import TextNode from './TestNode';
 class Mytree {
@@ -7,8 +6,8 @@ class Mytree {
         this.nodes = [];
         this.creatTree(this.paths);
     }
-    newAction=function(){
-        console.log(this,"新的骚操作!上下文定向到选中节点");
+    newAction = function () {
+        console.log(this, "新的骚操作!上下文定向到选中节点");
     }
     creatTree(paths) {
         if (!paths)
@@ -49,19 +48,25 @@ class Mytree {
             //判断即将要创建的节点是否已经存在，存在，则不创建
             if (this.GetTreeNodeWithFullPathNameToRoot(this.nodes, fullPathToRootName.split('.'), 0) === null) {
                 //创建新节点
-                newTreeNodeBaseViewModel = new BaseNode(fullPathToRootName);
+                newTreeNodeBaseViewModel = new TextNode(fullPathToRootName);
                 //获取父节点
                 let parentTreeNodeBaseViewModel = this.GetTreeNodeWithFullPathNameToRoot(this.nodes, parentFullPathToRootName.split('.'), 0);
 
                 if (parentTreeNodeBaseViewModel != null) {
-                    newTreeNodeBaseViewModel.parent=parentTreeNodeBaseViewModel;
-                    newTreeNodeBaseViewModel.registerMenu( new MenuItem({action: 'newAction', label: '新的操作', disabled: false, logo: "delete.png",parent:newTreeNodeBaseViewModel}),this.newAction);
-                    parentTreeNodeBaseViewModel.appendChild(newTreeNodeBaseViewModel); //往父节点里面添加一个子节点
+                    newTreeNodeBaseViewModel.parent = parentTreeNodeBaseViewModel;
+                    newTreeNodeBaseViewModel.registerMenu(new MenuItem({
+                        action: 'newAction',
+                        label: '新的操作',
+                        disabled: false,
+                        logo: "delete.png",
+                        parent: newTreeNodeBaseViewModel
+                    }), this.newAction);
+                    parentTreeNodeBaseViewModel.childs.push(newTreeNodeBaseViewModel); //往父节点里面添加一个子节点
                 } else {
                     //要创建的节点树里面没有，且找不到父节点。代表当前新增的节点为根节点
                     this.nodes.push(newTreeNodeBaseViewModel);
                     newTreeNodeBaseViewModel.IsExpanded = true; //根节点默认展开
-                    newTreeNodeBaseViewModel.selected=true;
+                    newTreeNodeBaseViewModel.selected = true;
                 }
             }
         }
@@ -110,13 +115,14 @@ class Mytree {
         }
 
     }
-     appendChild(currentNode){
-        let newNode=new TextNode(currentNode.fullPath+".NewName");
-        currentNode.appendChild(newNode);
-        currentNode.IsExpanded=true;
-        newNode.selected=true;
-        return newNode.fullPath;
-     }
-  
+    appendChild(currentNode) {
+        let newNode=currentNode.appendChild();
+        if (newNode) {
+            currentNode.IsExpanded = true;
+            return newNode.fullPath;
+        }
+        return "";
+    }
+
 }
 export default Mytree;
