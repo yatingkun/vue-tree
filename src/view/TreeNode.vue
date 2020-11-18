@@ -239,8 +239,12 @@ export default {
       this.renaming = false;
     },
     endRenaming() {
+      let preval=this.data.fullPath;
       this.data.name = this.renameNewLabel;
       this.renaming = false;
+      if(preval!==this.data.fullPath){
+         EventBus.$emit("renamed", preval ,this.data.name); //
+      }
     },
     dblClickLabel() {
       if (this.renameOnDblClick) {

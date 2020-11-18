@@ -8,7 +8,6 @@ module.exports = {
    config.entry.app = ["babel-polyfill", "./src/main.js"];
     config.devtool = 'source-map';
   },
-
 }
 //遇到这个报错时需要新建vue.config.js来这样做
 //You are using the runtime-only build of Vue where the template compiler is not available.

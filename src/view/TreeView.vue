@@ -125,7 +125,7 @@ export default {
     afterAddChild(currentNode, newNodePath) {
       this.$nextTick(() => {
         //节点更新完毕后执行
-        if (!newNodePath) return;//说明添加失败，名称有误
+        if (!newNodePath) return;//说明
         currentNode.selected = false; //当前右击的树节点取消选中
         if (currentNode.$children) {
           currentNode.$children.forEach((element) => {
@@ -137,12 +137,19 @@ export default {
         }
       });
     },
+     renamed(oldFullpath, newName) {
+      this.$nextTick(() => {
+          this.$emit("renamed",oldFullpath, newName);
+      });
+    },
   },
+  
   created() {
     this.selectedNode = null;
     EventBus.$on("contextMenuItemSelect", this.menuItemSelected);
     EventBus.$on("afterAddChild", this.afterAddChild);
     EventBus.$on("setContextMenu", this.setMenuContent);
+     EventBus.$on("renamed", this.renamed);
      this.$nextTick(() => {
       this.createNodeMap();
     });

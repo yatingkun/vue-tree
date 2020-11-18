@@ -20,6 +20,7 @@ new Vue({
 						iconClassProp="icon"
                         prependIconClass="fas"
                         @appendChild="appendChild"
+                        @renamed="renamed"
 						@nodeSelect="nodeSelect"></b-tree-view>
 				</div>
 			</div>
@@ -51,6 +52,9 @@ new Vue({
         appendChild(currentNode) {
            let childrenFullPath= this.treeViewModel.appendChild(currentNode.data);
            EventBus.$emit("afterAddChild",currentNode,childrenFullPath);
+        },
+        renamed(pre,val){
+            console.log(pre,val);
         }
     },
 
