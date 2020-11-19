@@ -4,7 +4,7 @@
       class="tree-node"
       :class="{
         'has-child-nodes': hasChildren,
-        'tree-node-expanded': this.data.IsExpanded,
+        'tree-node-expanded': this.IsExpanded,
       }"
       @contextmenu="showContextMenu($event)"
     >
@@ -45,12 +45,13 @@
     </div>
     <div
       class="tree-node-children"
-      v-show="this.data.IsExpanded && data.childs && Array.isArray(data.childs)"
+      v-show="this.IsExpanded"
     >
-      <template v-for="(nodeData) in data.childs">
+      <template v-for="(nodeData,index) in data.childs">
         <tree-node
           :data="nodeData"
           :key="nodeData.fullPath"
+          :index="index"
           ref="childNodes"
           :renameOnDblClick="renameOnDblClick"
           :defaultIconClass="defaultIconClass"
@@ -68,7 +69,7 @@
 
 <script>
 import EventBus from "./EventBus";
-import Vue from "vue";
+//import Vue from "vue";
 export default {
   name: "tree-node",
   components: {
@@ -105,7 +106,7 @@ export default {
     contextMenu: {
       type: Boolean,
       default: true,
-    },
+    }
   },
   data() {
     return {
@@ -114,6 +115,7 @@ export default {
       renaming: false,
       renameNewLabel: this.data.name,
       currentAddedNode: "",
+      IsExpanded:this.data.IsExpanded
     };
   },
   directives: {
@@ -137,6 +139,9 @@ export default {
       },
       deep: true, //true 深度监听
     },
+    IsExpanded(newVal){    
+     this.data.IsExpanded = newVal;
+    }
   },
   computed: {
     hasChildren() {
@@ -150,13 +155,7 @@ export default {
   },
   methods: {
     toggle() {
-      if (
-        this.data.childs &&
-        Array.isArray(this.data.childs) &&
-        this.data.childs.length > 0
-      ) {
-        this.data.IsExpanded = !this.data.IsExpanded;
-      }
+     this.IsExpanded=!this.IsExpanded;   
     },
     toggleSelection() {
       if (!this.renaming) {
@@ -174,16 +173,10 @@ export default {
       }
     },
     expand() {
-      if (
-        this.data.childs &&
-        Array.isArray(this.data.childs) &&
-        this.data.childs.length > 0
-      ) {
-        this.data.IsExpanded = true;
-      }
+      this.IsExpanded=true;
     },
     collapse() {
-      this.data.IsExpanded = false;
+       this.IsExpanded = false;
     },
     childNodeSelect(node, isSelected) {
       // forward event to the parent node
@@ -219,16 +212,6 @@ export default {
         EventBus.$emit("setContextMenu", this); //先通知主页面设置菜单内容
       }
     },
-    delete() {
-      this.$emit("deleteNode", this);
-    },
-    appendChild(childNodeData) {
-      if (this.data.childs === undefined) {
-        Vue.set(this.data, "childs", []);
-      }
-      this.data.childs.push(childNodeData);
-      this.data.IsExpanded = true;
-    },
     startRenaming() {
       this.deselect();
       this.renameNewLabel = this.data.name;
@@ -239,11 +222,11 @@ export default {
       this.renaming = false;
     },
     endRenaming() {
-      let preval=this.data.fullPath;
+      let preFullPatrh=this.data.fullPath;
       this.data.name = this.renameNewLabel;
       this.renaming = false;
-      if(preval!==this.data.fullPath){
-         EventBus.$emit("renamed", preval ,this.data.name); //
+      if(preFullPatrh!==this.data.fullPath){
+         EventBus.$emit("renamed", preFullPatrh ,this); //
       }
     },
     dblClickLabel() {

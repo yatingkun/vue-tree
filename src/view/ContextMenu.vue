@@ -46,8 +46,11 @@ export default {
   },
   methods: {
     open(node) {
+      if(this.$refs.ctxMenu){
       this.activeNode = node;
       this.$refs.ctxMenu.open();
+      }
+     
     },
     menuItemSelected(item) {
       EventBus.$emit("contextMenuItemSelect", item, this.activeNode);

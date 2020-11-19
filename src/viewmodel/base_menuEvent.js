@@ -1,13 +1,13 @@
 
 class MenuEventBus {
     constructor(content) {
-        this.self=content;
+        this.self=content;//当前上下文
         this.actions = [];//存储发布的事件集合
     }
-     listen(eName, callback, listener) {
+     listen(eName, callback) {
         let isNew = true;
         this.actions.forEach(element => {
-            if (element.key === eName && element.listener === listener) {
+            if (element.key === eName) {
                 element.cb = callback;
                 isNew = false;
             }
@@ -16,7 +16,6 @@ class MenuEventBus {
             let obj = {};
             obj.key = eName;
             obj.cb = callback;
-            obj.listener = listener;
             this.actions.push(obj);
         }
     }
@@ -28,10 +27,10 @@ class MenuEventBus {
         })
     }
   
-     unListen(eName, listener) {
+     unListen(eName) {
         let func = this.actions.slice();
         func.forEach((element, index) => {
-            if (element.key === eName && element.listener === listener) {
+            if (element.key === eName) {
                 this.actions.splice(index, 1);
             }
         });

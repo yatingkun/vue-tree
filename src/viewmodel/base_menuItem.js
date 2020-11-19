@@ -1,10 +1,10 @@
 class BaseMenuItem{
     constructor(obj){
-         this.action=obj.action;
+         this.actionName=obj.actionName;
          this.label=obj.label;
          this.disabled=obj.disabled; 
          this.logo=obj.logo;
-         this.parent=obj.parent;
+         this.fn=obj.fn;
     }
 }
 export default BaseMenuItem;

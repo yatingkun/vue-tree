@@ -1,16 +1,10 @@
 <template>
   <div class="tree-view">
     <context-menu
-      v-if="contextMenu"
+      v-if="contextMenuItems.length && contextMenu"
       :contextMenuItems="contextMenuItems"
     ></context-menu>
-
-    <drop-between-zone
-      @nodeDrop="dropNodeAtPosition(0)"
-      v-if="draggedNode !== null && draggedNode.data !== data[0]"
-    >
-    </drop-between-zone>
-    <template v-for="(nodeData) in data">
+    <template v-for="nodeData in data">
       <tree-node
         :key="nodeData.fullPath"
         :renameOnDblClick="renameNodeOnDblClick"
@@ -32,13 +26,9 @@
 import TreeNode from "./TreeNode.vue";
 import EventBus from "./EventBus.js";
 import ContextMenu from "./ContextMenu.vue";
-
+import BaseViewModel from "../viewmodel/base_viewModel";
 export default {
   props: {
-    data: {
-      type: Array,
-      required: true,
-    },
     allowMultiple: {
       type: Boolean,
       default: false,
@@ -72,11 +62,16 @@ export default {
       type: Boolean,
       default: false,
     },
+    viewModel: {
+      type: BaseViewModel,
+      default: null,
+    },
   },
   data() {
     return {
       draggedNode: null,
       currentNode: null,
+      data: this.viewModel.rootNodes,
     };
   },
   components: {
@@ -84,13 +79,6 @@ export default {
     ContextMenu,
   },
   methods: {
-    createNodeMap() {
-     //把所有节点以字典的方式存入一个集合以便外部进行索引
-    },
-    getNodeByKey() {
-      //return this.nodeMap.get(key);
-    },
-    // event bubbles up to the roots
     nodeSelect(node, isSelected) {
       this.$emit("nodeSelect", node, isSelected);
       if (isSelected) {
@@ -102,19 +90,13 @@ export default {
         this.selectedNode = null;
       }
     },
-    menuItemSelected(item, node) {
-      switch (item.action) {
-        case "removeNode":
-          node.data.deleteNode();
-          break;
-        case "appendChild":
-          this.$emit("appendChild", node);
-          break;
-        case "renaming":
-          node.startRenaming();
-          break;
-        default:
-          node.data.execute(item.action, node.data);
+    menuItemSelected(item, activeNode) {
+      if (this.viewModel) {
+        if (item.actionName === "renamed") {
+          activeNode.startRenaming();
+        } else {
+          this.viewModel.execute(item.actionName, activeNode); //执行viewModel的逻辑
+        }
       }
     },
     setMenuContent(node) {
@@ -125,7 +107,7 @@ export default {
     afterAddChild(currentNode, newNodePath) {
       this.$nextTick(() => {
         //节点更新完毕后执行
-        if (!newNodePath) return;//说明
+        if (!newNodePath) return; //说明
         currentNode.selected = false; //当前右击的树节点取消选中
         if (currentNode.$children) {
           currentNode.$children.forEach((element) => {
@@ -137,41 +119,26 @@ export default {
         }
       });
     },
-     renamed(oldFullpath, newName) {
+    renamed(oldFullpath, activeNode) {
       this.$nextTick(() => {
-          this.$emit("renamed",oldFullpath, newName);
+        if (this.viewModel) {
+          this.viewModel.execute("renamed", {oldFullpath:oldFullpath, activeNode:activeNode}); //执行viewModel的逻辑
+        }
       });
     },
   },
-  
+
   created() {
     this.selectedNode = null;
     EventBus.$on("contextMenuItemSelect", this.menuItemSelected);
     EventBus.$on("afterAddChild", this.afterAddChild);
     EventBus.$on("setContextMenu", this.setMenuContent);
-     EventBus.$on("renamed", this.renamed);
-     this.$nextTick(() => {
-      this.createNodeMap();
-    });
+    EventBus.$on("renamed", this.renamed);
   },
   computed: {
     contextMenuItems: {
       get() {
         if (this.currentNode) {
-          this.currentNode.contextMenuItems.forEach((element) => {
-            if (element.action === "removeNode") {
-              if (!this.currentNode.parent) {
-                //根节点
-                element.disabled = true;
-              }
-            }
-            if (element.action === "renaming") {
-              if (!this.currentNode.parent) {
-                //根节点
-                element.disabled = true;
-              }
-            }
-          });
           return this.currentNode.contextMenuItems;
         } else {
           return [];

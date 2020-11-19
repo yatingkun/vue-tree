@@ -1,10 +1,9 @@
 import Vue from 'vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import treeView from './view/TreeView.vue'
-import MyTree from './MyTree'
-let arry1 = ["11.22", "11.22.33"]
+import MyTree from './MyTreeViwModel'
+let arry1 = ["11.22", "11.22.33","11.22.44"]
 let treeViewModel = new MyTree(arry1);
-import EventBus from './view/EventBus';
 new Vue({
     template: `
 	<div class="row">
@@ -12,15 +11,13 @@ new Vue({
 			<div class="card">
 				<div class="card-body">
 					<b-tree-view
-						:data="treeData"
 						ref="tree"
 						:contextMenu="true"
 						:renameNodeOnDblClick="true"
-						:showIcons="true"
+                        :showIcons="true"
+                        :viewModel="treeViewModel"
 						iconClassProp="icon"
                         prependIconClass="fas"
-                        @appendChild="appendChild"
-                        @renamed="renamed"
 						@nodeSelect="nodeSelect"></b-tree-view>
 				</div>
 			</div>
@@ -36,7 +33,6 @@ new Vue({
     el: '#app',
     data() {
         return {
-            treeData: treeViewModel.nodes,
             selectedNode: null,
             treeViewModel:treeViewModel,
         }
@@ -48,13 +44,6 @@ new Vue({
             } else if (node.data === this.selectedNode) {
                 this.selectedNode = null
             }
-        },
-        appendChild(currentNode) {
-           let childrenFullPath= this.treeViewModel.appendChild(currentNode.data);
-           EventBus.$emit("afterAddChild",currentNode,childrenFullPath);
-        },
-        renamed(pre,val){
-            console.log(pre,val);
         }
     },
 
@@ -65,7 +54,6 @@ new Vue({
         
     },
     mounted:function(){
-        this.$on("appendChild", this.appendChild);
      }
 });
 
